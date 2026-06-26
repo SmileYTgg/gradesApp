@@ -12,7 +12,6 @@
         flex-direction: row;
     }
 
-    /* Desktop layout */
     #left, #right {
         width: 50%;
         padding: 20px;
@@ -28,7 +27,6 @@
         background: #ffffff;
     }
 
-    /* Mobile layout */
     @media (max-width: 800px) {
         body {
             flex-direction: column;
@@ -71,6 +69,11 @@
         border-radius: 4px;
     }
 
+    #clearBtn {
+        background: #b30000;
+        margin-left: 10px;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -99,6 +102,7 @@
     <h1>Введення балів</h1>
     <div id="students"></div>
     <button onclick="addStudent()">Додати учня</button>
+    <button id="clearBtn" onclick="clearData()">Очистити дані</button>
 </div>
 
 <div id="right">
@@ -120,16 +124,37 @@
 <script>
 let studentCount = 0;
 
-function addStudent() {
+/* ---------------- COOKIE HELPERS ---------------- */
+
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+}
+
+function getCookie(name) {
+    const decoded = decodeURIComponent(document.cookie);
+    const parts = decoded.split("; ");
+    for (let p of parts) {
+        if (p.startsWith(name + "=")) {
+            return p.substring(name.length + 1);
+        }
+    }
+    return "";
+}
+
+/* ---------------- MAIN FUNCTIONS ---------------- */
+
+function addStudent(name = "", scores = "") {
     studentCount++;
     const div = document.createElement("div");
     div.className = "student-block";
     div.innerHTML = `
-        <label><b>Учень ${studentCount} — ім'я:</b></label>
-        <input type="text" class="name" oninput="calculate()">
+        <label><b>Ім'я учення ${studentCount}:</b></label>
+        <input type="text" class="name" value="${name}" oninput="calculate()">
 
         <label>Бали (через кому):</label>
-        <textarea class="scores" rows="2" oninput="calculate()"></textarea>
+        <textarea class="scores" rows="2" oninput="calculate()">${scores}</textarea>
     `;
     document.getElementById("students").appendChild(div);
     calculate();
@@ -138,10 +163,13 @@ function addStudent() {
 function calculate() {
     const blocks = document.querySelectorAll(".student-block");
     let results = [];
+    let saveData = [];
 
     blocks.forEach(block => {
         const name = block.querySelector(".name").value.trim();
         const raw = block.querySelector(".scores").value;
+
+        saveData.push({ name, scores: raw });
 
         if (!name) return;
 
@@ -162,6 +190,10 @@ function calculate() {
         });
     });
 
+    // Save to cookies for 7 days
+    setCookie("students", JSON.stringify(saveData), 7);
+
+    // Sort by best average
     results.sort((a,b) => b.avg - a.avg);
 
     const tbody = document.querySelector("#resultsTable tbody");
@@ -180,7 +212,34 @@ function calculate() {
     });
 }
 
-// Mobile detection fallback
+function clearData() {
+    if (!confirm("Ви впевнені, що хочете очистити всі дані?")) return;
+
+    setCookie("students", "", -1); // delete cookie
+    document.getElementById("students").innerHTML = "";
+    studentCount = 0;
+    addStudent();
+}
+
+/* ---------------- LOAD SAVED DATA ---------------- */
+
+function loadSaved() {
+    const saved = getCookie("students");
+    if (!saved) {
+        addStudent();
+        return;
+    }
+
+    try {
+        const arr = JSON.parse(saved);
+        arr.forEach(s => addStudent(s.name, s.scores));
+    } catch {
+        addStudent();
+    }
+}
+
+/* ---------------- MOBILE DETECTION ---------------- */
+
 function detectMobile() {
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
     if (isMobile) {
@@ -193,7 +252,7 @@ function detectMobile() {
 }
 
 detectMobile();
-addStudent();
+loadSaved();
 </script>
 
 </body>
