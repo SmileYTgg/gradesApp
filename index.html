@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Статистика балів студентів</title>
+<title>Статистика балів учнів</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -98,7 +98,7 @@
 <div id="left">
     <h1>Введення балів</h1>
     <div id="students"></div>
-    <button onclick="addStudent()">Додати студента</button>
+    <button onclick="addStudent()">Додати учня</button>
 </div>
 
 <div id="right">
@@ -106,7 +106,7 @@
     <table id="resultsTable">
         <thead>
             <tr>
-                <th>Студент</th>
+                <th>Учень</th>
                 <th>Середній бал</th>
                 <th>Мін</th>
                 <th>Макс</th>
@@ -125,7 +125,7 @@ function addStudent() {
     const div = document.createElement("div");
     div.className = "student-block";
     div.innerHTML = `
-        <label><b>Студент ${studentCount} — ім'я:</b></label>
+        <label><b>Учень ${studentCount} — ім'я:</b></label>
         <input type="text" class="name" oninput="calculate()">
 
         <label>Бали (через кому):</label>
